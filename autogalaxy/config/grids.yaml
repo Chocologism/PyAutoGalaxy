@@ -2,10 +2,13 @@ radial_minimum:
   radial_minimum:
     Chameleon: 1.0e-08
     ChameleonSph: 1.0e-08
+    dPIESph: 1.0e-8
     DevVaucouleurs: 1.0e-06
     DevVaucouleursSph: 1.0e-06
     dPIE: 1.0e-08
     dPIESph: 1.0e-08
+    dPIE_custom2: 1.0e-08
+    dPIESph_custom2: 1.0e-08
     ExponentialRadialGradient: 1.0e-06
     ExponentialRadialGradientSph: 1.0e-06
     ElsonFreeFall: 1.0e-08
@@ -19,7 +22,6 @@ radial_minimum:
     GaussianSph: 1.0e-08
     gNFW: 1.0e-06
     gNFWMCRLudlow: 1.0e-06
-    gNFWVirialMassConcSph: 1.0e-06
     gNFWSph: 1.0e-06
     Isothermal: 1.0e-08
     IsothermalCore: 1.0e-08
