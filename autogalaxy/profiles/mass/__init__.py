@@ -14,6 +14,8 @@ from .total import (
     IsothermalSph,
     dPIE,
     dPIESph,
+    dPIE_custom1,
+    dPIESph_custom1,
     dPIE_custom2,
     dPIESph_custom2,
 )
