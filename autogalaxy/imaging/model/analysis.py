@@ -7,23 +7,26 @@ import autoarray as aa
 
 from autoarray.exc import PixelizationException
 
-from autogalaxy.analysis.adapt_images import AdaptImages
-from autogalaxy.analysis.analysis import AnalysisDataset
+from autogalaxy.analysis.adapt_images.adapt_image_maker import AdaptImageMaker
+from autogalaxy.analysis.analysis.dataset import AnalysisDataset
 from autogalaxy.analysis.preloads import Preloads
 from autogalaxy.cosmology.lensing import LensingCosmology
 from autogalaxy.cosmology.wrap import Planck15
-from autogalaxy.imaging.model.visualizer import VisualizerImaging
 from autogalaxy.imaging.model.result import ResultImaging
+from autogalaxy.imaging.model.visualizer import VisualizerImaging
 from autogalaxy.imaging.fit_imaging import FitImaging
 
 from autogalaxy import exc
 
 
 class AnalysisImaging(AnalysisDataset):
+    Result = ResultImaging
+    Visualizer = VisualizerImaging
+
     def __init__(
         self,
         dataset: aa.Imaging,
-        adapt_images: Optional[AdaptImages] = None,
+        adapt_image_maker: Optional[AdaptImageMaker] = None,
         cosmology: LensingCosmology = Planck15(),
         settings_inversion: aa.SettingsInversion = None,
     ):
@@ -46,8 +49,8 @@ class AnalysisImaging(AnalysisDataset):
         ----------
         dataset
             The `Imaging` dataset that the model is fitted to.
-        adapt_images
-            The adapt-model image and galaxies images of a previous result in a model-fitting pipeline, which are
+        adapt_image_maker
+            Makes the adapt-model image and galaxies images of a previous result in a model-fitting pipeline, which are
             used by certain classes for adapting the analysis to the properties of the dataset.
         cosmology
             The Cosmology assumed for this analysis.
@@ -56,7 +59,7 @@ class AnalysisImaging(AnalysisDataset):
         """
         super().__init__(
             dataset=dataset,
-            adapt_images=adapt_images,
+            adapt_image_maker=adapt_image_maker,
             cosmology=cosmology,
             settings_inversion=settings_inversion,
         )
@@ -190,123 +193,6 @@ class AnalysisImaging(AnalysisDataset):
             run_time_dict=run_time_dict,
         )
 
-    def visualize_before_fit(self, paths: af.DirectoryPaths, model: af.Collection):
-        """
-        PyAutoFit calls this function immediately before the non-linear search begins.
-
-        It visualizes objects which do not change throughout the model fit like the dataset.
-
-        Parameters
-        ----------
-        paths
-            The PyAutoFit paths object which manages all paths, e.g. where the non-linear search outputs are stored,
-            visualization and the pickled objects used by the aggregator output by this function.
-        model
-            The PyAutoFit model object, which includes model components representing the galaxies that are fitted to
-            the imaging data.
-        """
-
-        visualizer = VisualizerImaging(visualize_path=paths.image_path)
-
-        visualizer.visualize_imaging(dataset=self.dataset)
-
-        if self.adapt_images is not None:
-            visualizer.visualize_adapt_images(adapt_images=self.adapt_images)
-
-    def visualize(
-        self,
-        paths: af.DirectoryPaths,
-        instance: af.ModelInstance,
-        during_analysis: bool,
-    ):
-        """
-        Output images of the maximum log likelihood model inferred by the model-fit. This function is called throughout
-        the non-linear search at regular intervals, and therefore provides on-the-fly visualization of how well the
-        model-fit is going.
-
-        The visualization performed by this function includes:
-
-        - Images of the best-fit galaxies, including the images of each of its galaxies.
-
-        - Images of the best-fit `FitImaging`, including the model-image, residuals and chi-squared of its fit to
-          the imaging data.
-
-        - The adapt-images of the model-fit showing how the galaxies are used to represent different galaxies in
-          the dataset.
-
-        The images output by this function are customized using the file `config/visualize/plots.ini`.
-
-        Parameters
-        ----------
-        paths
-            The PyAutoFit paths object which manages all paths, e.g. where the non-linear search outputs are stored,
-            visualization, and the pickled objects used by the aggregator output by this function.
-        instance
-            An instance of the model that is being fitted to the data by this analysis (whose parameters have been set
-            via a non-linear search).
-        during_analysis
-            If True the visualization is being performed midway through the non-linear search before it is finished,
-            which may change which images are output.
-        """
-        fit = self.fit_from(instance=instance)
-
-        visualizer = VisualizerImaging(visualize_path=paths.image_path)
-        visualizer.visualize_imaging(dataset=self.dataset)
-
-        try:
-            visualizer.visualize_fit_imaging(fit=fit, during_analysis=during_analysis)
-        except exc.InversionException:
-            pass
-
-        galaxies = fit.galaxies_linear_light_profiles_to_light_profiles
-
-        visualizer.visualize_galaxies(
-            galaxies=galaxies, grid=fit.grid, during_analysis=during_analysis
-        )
-        visualizer.visualize_galaxies_1d(
-            galaxies=galaxies, grid=fit.grid, during_analysis=during_analysis
-        )
-        if fit.inversion is not None:
-            visualizer.visualize_inversion(
-                inversion=fit.inversion, during_analysis=during_analysis
-            )
-
-    def make_result(
-        self,
-        samples: af.SamplesPDF,
-        search_internal=None,
-    ) -> ResultImaging:
-        """
-        After the non-linear search is complete create its `Result`, which includes:
-
-        - The samples of the non-linear search (E.g. MCMC chains, nested sampling samples) which are used to compute
-          the maximum likelihood model, posteriors and other properties.
-
-        - The model used to fit the data, which uses the samples to create specific instances of the model (e.g.
-          an instance of the maximum log likelihood model).
-
-        - The non-linear search used to perform the model fit.
-
-        The `ResultImaging` object contains a number of methods which use the above objects to create the max
-        log likelihood galaxies `FitImaging`, adapt-galaxy images,etc.
-
-        Parameters
-        ----------
-        samples
-            A PyAutoFit object which contains the samples of the non-linear search, for example the chains of an MCMC
-            run of samples of the nested sampler.
-        search
-            The non-linear search used to perform this model-fit.
-
-        Returns
-        -------
-        ResultImaging
-            The result of fitting the model to the imaging dataset, via a non-linear search.
-        """
-        return ResultImaging(
-            samples=samples, analysis=self, search_internal=search_internal
-        )
-
     def save_attributes(self, paths: af.DirectoryPaths):
         """
          Before the non-linear search begins, this routine saves attributes of the `Analysis` object to the `pickles`
@@ -314,7 +200,7 @@ class AnalysisImaging(AnalysisDataset):
 
          For this analysis, it uses the `AnalysisDataset` object's method to output the following:
 
-         - The imaging dataset (data / noise-map / settings / psf / etc.).
+         - The imaging dataset (data / noise-map / psf / over sampler / etc.).
          - The mask applied to the dataset.
          - The settings associated with the inversion.
          - The settings associated with the pixelization.

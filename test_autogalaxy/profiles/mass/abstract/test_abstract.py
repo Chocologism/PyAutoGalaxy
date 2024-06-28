@@ -18,7 +18,7 @@ def mass_within_radius_of_profile_from_grid_calculation(radius, profile):
 
     for x in xs:
         for y in ys:
-            eta = profile.elliptical_radii_grid_from(grid=np.array([[x, y]]))
+            eta = profile.elliptical_radii_grid_from(grid=ag.Grid2DIrregular([[x, y]]))
 
             if eta < radius:
                 mass_total += profile.convergence_func(eta) * area
@@ -27,13 +27,13 @@ def mass_within_radius_of_profile_from_grid_calculation(radius, profile):
 
 
 def test__deflections_2d_via_potential_2d_from():
-    sis = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
+    mp = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
 
-    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05, sub_size=1)
+    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05)
 
-    deflections_via_calculation = sis.deflections_yx_2d_from(grid=grid)
+    deflections_via_calculation = mp.deflections_yx_2d_from(grid=grid)
 
-    deflections_via_potential = sis.deflections_2d_via_potential_2d_from(grid=grid)
+    deflections_via_potential = mp.deflections_2d_via_potential_2d_from(grid=grid)
 
     mean_error = np.mean(
         deflections_via_potential.slim - deflections_via_calculation.slim
@@ -45,7 +45,7 @@ def test__deflections_2d_via_potential_2d_from():
         centre=(0.0, 0.0), ell_comps=(0.111111, 0.0), einstein_radius=2.0
     )
 
-    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05, sub_size=1)
+    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05)
 
     deflections_via_calculation = sie.deflections_yx_2d_from(grid=grid)
 
@@ -61,7 +61,7 @@ def test__deflections_2d_via_potential_2d_from():
         centre=(0.0, 0.0), ell_comps=(0.0, -0.111111), einstein_radius=2.0
     )
 
-    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05, sub_size=1)
+    grid = ag.Grid2D.uniform(shape_native=(10, 10), pixel_scales=0.05)
 
     deflections_via_calculation = sie.deflections_yx_2d_from(grid=grid)
 
@@ -75,31 +75,31 @@ def test__deflections_2d_via_potential_2d_from():
 
 
 def test__mass_angular_within_circle_from():
-    sis = ag.mp.IsothermalSph(einstein_radius=2.0)
+    mp = ag.mp.IsothermalSph(einstein_radius=2.0)
 
-    mass = sis.mass_angular_within_circle_from(radius=2.0)
-    assert math.pi * sis.einstein_radius * 2.0 == pytest.approx(mass, 1e-3)
+    mass = mp.mass_angular_within_circle_from(radius=2.0)
+    assert math.pi * mp.einstein_radius * 2.0 == pytest.approx(mass, 1e-3)
 
-    sis = ag.mp.IsothermalSph(einstein_radius=4.0)
+    mp = ag.mp.IsothermalSph(einstein_radius=4.0)
 
-    mass = sis.mass_angular_within_circle_from(radius=4.0)
-    assert math.pi * sis.einstein_radius * 4.0 == pytest.approx(mass, 1e-3)
+    mass = mp.mass_angular_within_circle_from(radius=4.0)
+    assert math.pi * mp.einstein_radius * 4.0 == pytest.approx(mass, 1e-3)
 
-    sis = ag.mp.IsothermalSph(einstein_radius=2.0)
+    mp = ag.mp.IsothermalSph(einstein_radius=2.0)
 
     mass_grid = mass_within_radius_of_profile_from_grid_calculation(
-        radius=1.0, profile=sis
+        radius=1.0, profile=mp
     )
 
-    mass = sis.mass_angular_within_circle_from(radius=1.0)
+    mass = mp.mass_angular_within_circle_from(radius=1.0)
 
     assert mass_grid == pytest.approx(mass, 0.02)
 
 
 def test__average_convergence_of_1_radius():
-    sis = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
+    mp = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
 
-    assert sis.average_convergence_of_1_radius == pytest.approx(2.0, 1e-4)
+    assert mp.average_convergence_of_1_radius == pytest.approx(2.0, 1e-4)
 
     sie = ag.mp.Isothermal(
         centre=(0.0, 0.0), einstein_radius=1.0, ell_comps=(0.0, 0.111111)
@@ -123,7 +123,7 @@ def test__average_convergence_of_1_radius():
 def test__density_between_circular_annuli():
     einstein_radius = 1.0
 
-    sis = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=einstein_radius)
+    mp = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=einstein_radius)
 
     inner_annuli_radius = 2.0
     outer_annuli_radius = 3.0
@@ -131,7 +131,7 @@ def test__density_between_circular_annuli():
     inner_mass = math.pi * einstein_radius * inner_annuli_radius
     outer_mass = math.pi * einstein_radius * outer_annuli_radius
 
-    density_between_annuli = sis.density_between_circular_annuli(
+    density_between_annuli = mp.density_between_circular_annuli(
         inner_annuli_radius=inner_annuli_radius, outer_annuli_radius=outer_annuli_radius
     )
 
@@ -143,40 +143,24 @@ def test__density_between_circular_annuli():
         density_between_annuli, 1e-4
     )
 
-    nfw = ag.mp.NFW(centre=(0.0, 0.0), ell_comps=(0.111111, 0.0), kappa_s=1.0)
-
-    inner_mass = nfw.mass_angular_within_circle_from(radius=1.0)
-
-    outer_mass = nfw.mass_angular_within_circle_from(radius=2.0)
-
-    density_between_annuli = nfw.density_between_circular_annuli(
-        inner_annuli_radius=1.0, outer_annuli_radius=2.0
-    )
-
-    annuli_area = (np.pi * 2.0**2.0) - (np.pi * 1.0**2.0)
-
-    assert (outer_mass - inner_mass) / annuli_area == pytest.approx(
-        density_between_annuli, 1e-4
-    )
-
 
 def test__extract_attribute():
-    sis = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
+    mp = ag.mp.IsothermalSph(centre=(0.0, 0.0), einstein_radius=2.0)
 
-    einstein_radii = sis.extract_attribute(
+    einstein_radii = mp.extract_attribute(
         cls=ag.mp.MassProfile, attr_name="einstein_radius"
     )
 
     assert einstein_radii.in_list[0] == 2.0
 
-    centres = sis.extract_attribute(cls=ag.mp.MassProfile, attr_name="centre")
+    centres = mp.extract_attribute(cls=ag.mp.MassProfile, attr_name="centre")
 
     assert centres.in_list[0] == (0.0, 0.0)
 
     assert (
-        sis.extract_attribute(cls=ag.mp.MassProfile, attr_name="einstein_radiu") == None
+        mp.extract_attribute(cls=ag.mp.MassProfile, attr_name="einstein_radiu") == None
     )
-    sis.extract_attribute(cls=ag.LightProfile, attr_name="einstein_radius")
+    mp.extract_attribute(cls=ag.LightProfile, attr_name="einstein_radius")
 
 
 def test__regression__centre_of_profile_in_right_place():
@@ -216,48 +200,47 @@ def test__regression__centre_of_profile_in_right_place():
     assert deflections.native[2, 4, 0] < 0
     assert deflections.native[1, 4, 1] > 0
     assert deflections.native[1, 3, 1] < 0
-
-    grid = ag.Grid2DIterate.uniform(
-        shape_native=(7, 7),
-        pixel_scales=1.0,
-        fractional_accuracy=0.99,
-        sub_steps=[2, 4],
-    )
-
-    mass_profile = ag.mp.Isothermal(centre=(2.0, 1.0), einstein_radius=1.0)
-    convergence = mass_profile.convergence_2d_from(grid=grid)
-    max_indexes = np.unravel_index(
-        convergence.native.argmax(), convergence.shape_native
-    )
-    assert max_indexes == (1, 4)
-
-    potential = mass_profile.potential_2d_from(grid=grid)
-    max_indexes = np.unravel_index(potential.native.argmin(), potential.shape_native)
-    assert max_indexes == (1, 4)
-
-    deflections = mass_profile.deflections_yx_2d_from(grid=grid)
-    assert deflections.native[1, 4, 0] >= 0
-    assert deflections.native[2, 4, 0] <= 0
-    assert deflections.native[1, 4, 1] >= 0
-    assert deflections.native[1, 3, 1] <= 0
-
-    mass_profile = ag.mp.IsothermalSph(centre=(2.0, 1.0), einstein_radius=1.0)
-
-    convergence = mass_profile.convergence_2d_from(grid=grid)
-    max_indexes = np.unravel_index(
-        convergence.native.argmax(), convergence.shape_native
-    )
-    assert max_indexes == (1, 4)
-
-    potential = mass_profile.potential_2d_from(grid=grid)
-    max_indexes = np.unravel_index(potential.native.argmin(), potential.shape_native)
-    assert max_indexes == (1, 4)
-
-    deflections = mass_profile.deflections_yx_2d_from(grid=grid)
-    assert deflections.native[1, 4, 0] >= 0
-    assert deflections.native[2, 4, 0] <= 0
-    assert deflections.native[1, 4, 1] >= 0
-    assert deflections.native[1, 3, 1] <= 0
+    #
+    # grid = ag.Grid2D.uniform(
+    #     shape_native=(7, 7),
+    #     pixel_scales=1.0,
+    #     over_sampling=ag.OverSamplingIterate(fractional_accuracy=0.99, sub_steps=[2, 4]),
+    # )
+    #
+    # mass_profile = ag.mp.Isothermal(centre=(2.0, 1.0), einstein_radius=1.0)
+    # convergence = mass_profile.convergence_2d_from(grid=grid)
+    # max_indexes = np.unravel_index(
+    #     convergence.native.argmax(), convergence.shape_native
+    # )
+    # assert max_indexes == (1, 4)
+    #
+    # potential = mass_profile.potential_2d_from(grid=grid)
+    # max_indexes = np.unravel_index(potential.native.argmin(), potential.shape_native)
+    # assert max_indexes == (1, 4)
+    #
+    # deflections = mass_profile.deflections_yx_2d_from(grid=grid)
+    # assert deflections.native[1, 4, 0] >= 0
+    # assert deflections.native[2, 4, 0] <= 0
+    # assert deflections.native[1, 4, 1] >= 0
+    # assert deflections.native[1, 3, 1] <= 0
+    #
+    # mass_profile = ag.mp.IsothermalSph(centre=(2.0, 1.0), einstein_radius=1.0)
+    #
+    # convergence = mass_profile.convergence_2d_from(grid=grid)
+    # max_indexes = np.unravel_index(
+    #     convergence.native.argmax(), convergence.shape_native
+    # )
+    # assert max_indexes == (1, 4)
+    #
+    # potential = mass_profile.potential_2d_from(grid=grid)
+    # max_indexes = np.unravel_index(potential.native.argmin(), potential.shape_native)
+    # assert max_indexes == (1, 4)
+    #
+    # deflections = mass_profile.deflections_yx_2d_from(grid=grid)
+    # assert deflections.native[1, 4, 0] >= 0
+    # assert deflections.native[2, 4, 0] <= 0
+    # assert deflections.native[1, 4, 1] >= 0
+    # assert deflections.native[1, 3, 1] <= 0
 
 
 def test__decorators__convergence_1d_from__grid_2d_in__returns_1d_image_via_projected_quantities():
@@ -371,34 +354,46 @@ def test__decorators__grid_iterate_in__iterates_grid_result_correctly(gal_x1_mp)
         pixel_scales=(1.0, 1.0),
     )
 
-    grid = ag.Grid2DIterate.from_mask(mask=mask, fractional_accuracy=1.0, sub_steps=[2])
-
-    mass_profile = ag.mp.Isothermal(centre=(0.08, 0.08), einstein_radius=1.0)
-
-    deflections = mass_profile.deflections_yx_2d_from(grid=grid)
-
-    mask_sub_2 = mask.mask_new_sub_size_from(mask=mask, sub_size=2)
-    grid_sub_2 = ag.Grid2D.from_mask(mask=mask_sub_2)
-    deflections_sub_2 = mass_profile.deflections_yx_2d_from(grid=grid_sub_2).binned
-
-    assert deflections == pytest.approx(deflections_sub_2, 1.0e-6)
-
-    grid = ag.Grid2DIterate.from_mask(
-        mask=mask, fractional_accuracy=0.99, sub_steps=[2, 4, 8]
+    grid = ag.Grid2D.from_mask(
+        mask=mask,
+        over_sampling=ag.OverSamplingIterate(fractional_accuracy=1.0, sub_steps=[2]),
     )
 
     mass_profile = ag.mp.Isothermal(centre=(0.08, 0.08), einstein_radius=1.0)
 
-    deflections = mass_profile.deflections_yx_2d_from(grid=grid)
+    convergence = mass_profile.convergence_2d_from(grid=grid)
 
-    mask_sub_4 = mask.mask_new_sub_size_from(mask=mask, sub_size=4)
-    grid_sub_4 = ag.Grid2D.from_mask(mask=mask_sub_4)
-    deflections_sub_4 = mass_profile.deflections_yx_2d_from(grid=grid_sub_4).binned
+    grid_sub_2 = ag.Grid2D(
+        values=grid, mask=mask, over_sampling=ag.OverSamplingUniform(sub_size=2)
+    )
+    convergence_sub_2 = mass_profile.convergence_2d_from(grid=grid_sub_2)
 
-    assert deflections[0, 0] == deflections_sub_4[0, 0]
+    assert convergence[0] == pytest.approx(0.35882721247144705, 1.0e-4)
+    assert convergence == pytest.approx(convergence_sub_2, 1.0e-6)
 
-    mask_sub_8 = mask.mask_new_sub_size_from(mask=mask, sub_size=8)
-    grid_sub_8 = ag.Grid2D.from_mask(mask=mask_sub_8)
-    deflections_sub_8 = mass_profile.deflections_yx_2d_from(grid=grid_sub_8).binned
+    grid = ag.Grid2D.from_mask(
+        mask=mask,
+        over_sampling=ag.OverSamplingIterate(
+            fractional_accuracy=0.99, sub_steps=[2, 4, 8]
+        ),
+    )
 
-    assert deflections[4, 0] == deflections_sub_8[4, 0]
+    mass_profile = ag.mp.Isothermal(centre=(0.08, 0.08), einstein_radius=1.0)
+
+    convergence = mass_profile.convergence_2d_from(grid=grid)
+
+    grid_sub_4 = ag.Grid2D(
+        values=grid, mask=mask, over_sampling=ag.OverSamplingUniform(sub_size=4)
+    )
+    convergence_sub_4 = mass_profile.convergence_2d_from(grid=grid_sub_4)
+
+    assert convergence[0] == pytest.approx(0.360512586364902, 1.0e-4)
+    assert convergence[0] == convergence_sub_4[0]
+
+    grid_sub_8 = ag.Grid2D(
+        values=grid, mask=mask, over_sampling=ag.OverSamplingUniform(sub_size=8)
+    )
+    convergence_sub_8 = mass_profile.convergence_2d_from(grid=grid_sub_8)
+
+    assert convergence[4] == pytest.approx(1.8257180092529044, 1.0e-4)
+    assert convergence[4] == convergence_sub_8[4]

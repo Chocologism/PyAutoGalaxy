@@ -1,9 +1,7 @@
 from autoconf.dictable import from_dict, from_json, output_to_json, to_dict
 from autoarray.dataset import preprocess  # noqa
-from autoarray.dataset.imaging.settings import SettingsImaging  # noqa
 from autoarray.dataset.imaging.dataset import Imaging  # noqa
 from autoarray.dataset.interferometer.dataset import Interferometer  # noqa
-from autoarray.dataset.interferometer.settings import SettingsInterferometer  # noqa
 from autoarray.inversion.pixelization import mesh  # noqa
 from autoarray.inversion import regularization as reg  # noqa
 from autoarray.inversion.pixelization import image_mesh
@@ -13,12 +11,6 @@ from autoarray.inversion.inversion.factory import inversion_from as Inversion  #
 from autoarray.inversion.pixelization.image_mesh.abstract import AbstractImageMesh
 from autoarray.inversion.pixelization.mesh.abstract import AbstractMesh
 from autoarray.inversion.regularization.abstract import AbstractRegularization
-from autoarray.inversion.inversion.factory import (
-    inversion_imaging_unpacked_from as InversionImaging,
-)  # noqa
-from autoarray.inversion.inversion.factory import (
-    inversion_interferometer_unpacked_from as InversionInterferometer,
-)  # noqa
 from autoarray.inversion.pixelization.pixelization import Pixelization  # noqa
 from autoarray.inversion.pixelization.mappers.abstract import AbstractMapper
 from autoarray.inversion.pixelization.mappers.mapper_grids import MapperGrids  # noqa
@@ -38,9 +30,12 @@ from autoarray.structures.arrays.irregular import ArrayIrregular  # noqa
 from autoarray.structures.header import Header  # noqa
 from autoarray.structures.grids.uniform_1d import Grid1D  # noqa
 from autoarray.structures.grids.uniform_2d import Grid2D  # noqa
-from autoarray.structures.grids.iterate_2d import Grid2DIterate  # noqa
 from autoarray.structures.grids.irregular_2d import Grid2DIrregular  # noqa
 from autoarray.structures.grids.irregular_2d import Grid2DIrregularUniform  # noqa
+from autoarray.operators.over_sampling.uniform import OverSamplingUniform  # noqa
+from autoarray.operators.over_sampling.uniform import OverSamplerUniform  # noqa
+from autoarray.operators.over_sampling.iterate import OverSamplingIterate
+from autoarray.operators.over_sampling.iterate import OverSamplerIterate
 from autoarray.structures.mesh.rectangular_2d import Mesh2DRectangular  # noqa
 from autoarray.structures.mesh.voronoi_2d import Mesh2DVoronoi  # noqa
 from autoarray.structures.mesh.delaunay_2d import Mesh2DDelaunay  # noqa
@@ -52,7 +47,8 @@ from autoarray.structures.arrays.kernel_2d import Kernel2D  # noqa
 from autoarray.structures.visibilities import Visibilities  # noqa
 from autoarray.structures.visibilities import VisibilitiesNoiseMap  # noqa
 
-from .analysis.adapt_images import AdaptImages
+from .analysis.adapt_images.adapt_images import AdaptImages
+from .analysis.adapt_images.adapt_image_maker import AdaptImageMaker
 from .analysis.maker import FitMaker
 from .analysis.preloads import Preloads
 from . import aggregator as agg

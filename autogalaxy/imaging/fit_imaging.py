@@ -6,7 +6,7 @@ from autoconf import cached_property
 import autoarray as aa
 
 from autogalaxy.abstract_fit import AbstractFitInversion
-from autogalaxy.analysis.adapt_images import AdaptImages
+from autogalaxy.analysis.adapt_images.adapt_images import AdaptImages
 from autogalaxy.analysis.preloads import Preloads
 from autogalaxy.galaxy.galaxy import Galaxy
 from autogalaxy.galaxy.galaxies import Galaxies
@@ -86,7 +86,7 @@ class FitImaging(aa.FitImaging, AbstractFitInversion):
             self=self,
             model_obj=self.galaxies,
             sky=sky,
-            settings_inversion=settings_inversion
+            settings_inversion=settings_inversion,
         )
 
         self.sky = sky
@@ -151,13 +151,21 @@ class FitImaging(aa.FitImaging, AbstractFitInversion):
 
     @property
     def galaxies_to_inversion(self) -> GalaxiesToInversion:
-        return GalaxiesToInversion(
-            galaxies=self.galaxies,
-            sky=self.sky,
-            dataset=self.dataset,
+        dataset = aa.DatasetInterface(
             data=self.profile_subtracted_image,
             noise_map=self.noise_map,
+            convolver=self.dataset.convolver,
             w_tilde=self.w_tilde,
+            grid=self.grid,
+            grid_pixelization=self.dataset.grid_pixelization,
+            blurring_grid=self.dataset.blurring_grid,
+            border_relocator=self.dataset.border_relocator,
+        )
+
+        return GalaxiesToInversion(
+            dataset=dataset,
+            galaxies=self.galaxies,
+            sky=self.sky,
             adapt_images=self.adapt_images,
             settings_inversion=self.settings_inversion,
             preloads=self.preloads,
@@ -345,6 +353,7 @@ class FitImaging(aa.FitImaging, AbstractFitInversion):
         return FitImaging(
             dataset=self.dataset,
             galaxies=self.galaxies,
+            sky=self.sky,
             adapt_images=self.adapt_images,
             settings_inversion=settings_inversion,
             preloads=preloads,

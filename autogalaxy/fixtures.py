@@ -8,17 +8,19 @@ import autogalaxy.plot as aplt
 def make_masked_imaging_7x7():
     imaging_7x7 = make_imaging_7x7()
 
-    masked_imaging_7x7 = imaging_7x7.apply_mask(mask=make_sub_mask_2d_7x7())
+    return imaging_7x7.apply_mask(mask=make_mask_2d_7x7())
 
-    return masked_imaging_7x7.apply_settings(settings=ag.SettingsImaging(sub_size=1))
+
+def make_masked_imaging_7x7_sub_2():
+    imaging_7x7 = make_imaging_7x7_sub_2()
+
+    return imaging_7x7.apply_mask(mask=make_mask_2d_7x7())
 
 
 def make_masked_imaging_covariance_7x7():
     imaging_7x7 = make_imaging_covariance_7x7()
 
-    masked_imaging_7x7 = imaging_7x7.apply_mask(mask=make_sub_mask_2d_7x7())
-
-    return masked_imaging_7x7.apply_settings(settings=ag.SettingsImaging(sub_size=1))
+    return imaging_7x7.apply_mask(mask=make_mask_2d_7x7())
 
 
 # PROFILES #
@@ -239,29 +241,31 @@ def make_fit_interferometer_x2_galaxy_inversion_7x7():
     )
 
 
-def make_samples_with_result():
+def make_samples_summary_with_result():
     galaxy = af.Model(ag.Galaxy, redshift=0.5, bulge=af.Model(ag.lp.Sersic))
 
     model = af.Collection(galaxies=af.Collection(galaxy=galaxy))
 
     instance = model.instance_from_prior_medians()
 
-    return ag.m.MockSamples(max_log_likelihood_instance=instance)
+    return ag.m.MockSamplesSummary(max_log_likelihood_instance=instance)
 
 
 def make_analysis_imaging_7x7():
-    return ag.AnalysisImaging(
+    analysis = ag.AnalysisImaging(
         dataset=make_masked_imaging_7x7(),
-        adapt_images=make_adapt_images_7x7(),
         settings_inversion=aa.SettingsInversion(use_w_tilde=False),
     )
+    analysis._adapt_images = make_adapt_images_7x7()
+    return analysis
 
 
 def make_analysis_interferometer_7():
-    return ag.AnalysisInterferometer(
+    analysis = ag.AnalysisInterferometer(
         dataset=make_interferometer_7(),
-        adapt_images=make_adapt_images_7x7(),
     )
+    analysis._adapt_images = make_adapt_images_7x7()
+    return analysis
 
 
 def make_include_1d_all():
