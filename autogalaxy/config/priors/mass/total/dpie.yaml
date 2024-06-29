@@ -96,8 +96,6 @@ dPIESph:
     type: Uniform
     lower_limit: 0.00001
     upper_limit: 1.0e8
-<<<<<<< HEAD
-=======
 
 dPIE_custom1:
   centre_0:
@@ -368,4 +366,3 @@ dPIESph_custom2:
     gaussian_limits:
       lower: 0.0
       upper: inf
->>>>>>> main
