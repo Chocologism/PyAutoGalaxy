@@ -71,6 +71,21 @@ class PowerLawBroken(MassProfile):
             radius > self.break_radius
         )
 
+    def convergence_value_from_radius(self, radius: float) -> float:
+        """
+        Returns the dimensionless density kappa=Sigma/Sigma_c (eq. 1)
+        """
+
+        # Inside break radius
+        kappa_inner = self.kB * (self.break_radius / radius) ** self.inner_slope
+
+        # Outside break radius
+        kappa_outer = self.kB * (self.break_radius / radius) ** self.outer_slope
+
+        return kappa_inner * (radius <= self.break_radius) + kappa_outer * (
+            radius > self.break_radius
+        )
+
     @aa.grid_dec.to_array
     def potential_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         return np.zeros(shape=grid.shape[0])
