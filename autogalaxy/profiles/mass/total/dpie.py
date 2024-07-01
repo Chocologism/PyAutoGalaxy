@@ -224,7 +224,9 @@ class dPIE(dPIESph):
 
 class dPIESph_custom1(MassProfile):
     '''
-    use einstein radius instead of kappa_scale
+    use einstein radius instead of kappa_scale, just for test.
+    I wanna see if I can use a einstein radius which satisfies the "intermediate-axis-convention"
+    that will be the same as calculated by critical lines.
     '''
     def __init__(
         self,
@@ -465,6 +467,8 @@ class dPIESph_custom2(MassProfile):
     '''
     use velocity dispersion instead of kappa_scale
 
+    this has been tested well in real data, so I think it's correct.
+
     E0 = 6*\\pi* (D_{ds}*D{d})/D{s} * \\sigma^2 / c^2
 
     E0 have the unit same as a, s, and D, so the unit of E0 should be arcsec
@@ -516,6 +520,9 @@ class dPIESph_custom2(MassProfile):
             self.E0 / 2 * (s + a) / s *
             (1/np.sqrt(a**2 + radsq) - 1/np.sqrt(s**2 + radsq))
         )
+    
+    def _theta_E_from_WangH(self):
+        return self.E0 * (self.rs + self.ra)**2 * (self.rs - self.ra) / self.rs**3
 
     def _potential(self, radii):
         return 0
@@ -686,3 +693,229 @@ class dPIE_custom2(dPIESph_custom2):
         return potential_grid
 
 #test github
+    
+class dPIESph_custom3(MassProfile):
+    '''
+    use "reduced einstein radius" instead of E0
+
+    E0 = 6*\\pi* (D_{ds}*D{d})/D{s} * \\sigma^2 / c^2
+    theta_E = 2 * kappa_scale * ra * (rs + ra) / rs
+            = E0 * (rs + ra)**2 * (rs -ra) / rs**3
+
+    theta_E have the unit same as a, s, and D, so the unit of it should be arcsec
+    '''
+    def __init__(
+        self,
+        centre: Tuple[float, float] = (0.0, 0.0),
+        ra: float = 0.1,
+        rs: float = 2.0,
+        einstein_radius: float = 1.0,
+    ):
+        # Ensure rs > ra (things will probably break otherwise)
+        if ra > rs:
+            ra, rs = rs, ra
+        super(MassProfile, self).__init__(centre, (0.0, 0.0))
+        self.ra = ra
+        self.rs = rs
+        self.einstein_radius = einstein_radius
+
+    def _deflection_angle(self, radii):
+        '''
+        For a circularly symmetric dPIE profile, computes the magnitude of the deflection at each radius.
+        '''
+        # r_ra = radii / self.ra
+        # r_rs = radii / self.rs
+        # # c.f. Eliasdottir '07 eq. A20
+        # f = (
+        #     r_ra / (1 + np.sqrt(1 + r_ra * r_ra))
+        #     - r_rs / (1 + np.sqrt(1 + r_rs * r_rs))
+        # )
+
+        a, s = self.ra, self.rs
+        radii = np.maximum(radii, 1e-8)
+        f = (
+            radii / (a + np.sqrt(a**2 + radii**2))
+            - radii / (s + np.sqrt(s**2 + radii**2))
+        )
+
+        # c.f. WangH. '22 eq. A07
+        # magnitude of deflection
+        alpha = self.einstein_radius * s**2 / (s**2 - a**2) * f
+        return alpha
+
+    def _convergence(self, radii):
+        radsq = radii * radii
+        a, s = self.ra, self.rs
+        # c.f. WangH. '22 eqn (A7)
+        return (
+            self.einstein_radius / 2 * s**2 / (s**2 - a**2) *
+            (1/np.sqrt(a**2 + radsq) - 1/np.sqrt(s**2 + radsq))
+        )
+
+    def _potential(self, radii):
+        return 0
+        # raise NotImplementedError
+
+    # @aa.grid_dec.to_vector_yx
+    # #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_vector_yx
+    @aa.grid_dec.transform
+    @aa.grid_dec.relocate_to_radial_minimum
+    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
+        ys, xs = grid.T
+        (ycen, xcen) = self.centre
+        xoff, yoff = xs - xcen, ys - ycen
+        radii = np.sqrt(xoff**2 + yoff**2)
+
+        alpha = self._deflection_angle(radii)
+
+        # now we decompose the deflection into y/x components
+        defl_y = alpha * yoff / radii
+        defl_x = alpha * xoff / radii
+        return aa.Grid2DIrregular.from_yx_1d(
+            defl_y, defl_x
+        )
+
+    # #@aa.grid_dec.grid_2d_to_structure
+    # @aa.grid_dec.transform
+    # @aa.grid_dec.relocate_to_radial_minimum
+    @aa.over_sample
+    @aa.grid_dec.to_array
+    @aa.grid_dec.transform
+    @aa.grid_dec.relocate_to_radial_minimum
+    def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
+        # already transformed to center on profile centre so this works
+        radsq = (grid[:, 0]**2 + grid[:, 1]**2)
+        return self._convergence(np.sqrt(radsq))
+
+    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.relocate_to_radial_minimum
+    def potential_2d_from(self, grid: aa.type.Grid2DLike):
+        # already transformed to center on profile centre so this works
+        # radsq = (grid[:, 0]**2 + grid[:, 1]**2)
+
+        # return self._potential(np.sqrt(radsq))
+        # return aa.Grid2DIrregular.from_yx_1d(
+        #     0, 0
+        # )
+        potential_grid = np.zeros(grid.shape[0])
+        return potential_grid
+
+
+class dPIE_custom3(dPIESph_custom3):
+    '''
+    use velocity dispersion instead of kappa_scale
+
+    E0 = 6*\\pi* (D_{ds}*D{d})/D{s} * \\sigma^2 / c^2
+
+    E0 have the unit same as a, s, and D, so the unit of E0 should be arcsec
+    '''
+    def __init__(
+        self,
+        centre: Tuple[float, float] = (0.0, 0.0),
+        ell_comps: Tuple[float, float] = (0.0, 0.0),
+        ra: float = 0.1,
+        rs: float = 2.0,
+        einstein_radius: float = 1.0,
+    ):
+        super(MassProfile, self).__init__(centre, ell_comps)
+        if ra > rs:
+            ra, rs = rs, ra
+        self.ra = ra
+        self.rs = rs
+        self.einstein_radius = einstein_radius
+
+    def _align_to_major_axis(self, ys, xs):
+        '''
+        Aligns coordinates to the major axis of this halo. Returns (y', x'),
+        where x' is along the major axis and y' is along the minor axis.
+
+        Does NOT translate, only rotates.
+        '''
+        costheta, sintheta = self._cos_and_sin_to_x_axis()
+        _xs = (costheta * xs + sintheta * ys)
+        _ys = (-sintheta * xs + costheta * ys)
+        return _ys, _xs
+
+    def _align_from_major_axis(self, _ys, _xs):
+        '''
+        Given _ys and _xs as offsets along the minor and major axes,
+        respectively, this transforms them back to the regular coordinate
+        system.
+
+        Does NOT translate, only rotates.
+        '''
+        costheta, sintheta = self._cos_and_sin_to_x_axis()
+        xs = (costheta * _xs + -sintheta * _ys)
+        ys = (sintheta * _xs + costheta * _ys)
+        return ys, xs
+
+    def _ellip(self):
+        ellip = np.sqrt(self.ell_comps[0]**2 + self.ell_comps[1]**2)
+        MAX_ELLIP = 0.99999
+        return min(ellip, MAX_ELLIP)
+
+    # @aa.grid_dec.to_vector_yx
+    # #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_vector_yx
+    @aa.grid_dec.transform
+    @aa.grid_dec.relocate_to_radial_minimum
+    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
+        ys, xs = grid.T
+        (ycen, xcen) = self.centre
+        xoff, yoff = xs - xcen, ys - ycen
+        _ys, _xs = self._align_to_major_axis(yoff, xoff)
+
+        ellip = self._ellip()
+        _radii = np.sqrt(_xs**2 * (1 - ellip) + _ys**2 * (1 + ellip))
+
+        # Compute the deflection magnitude of a *non-elliptical* profile
+        alpha_circ = self._deflection_angle(_radii)
+
+        # This is in axes aligned to the major/minor axis
+        _defl_xs = alpha_circ * np.sqrt(1 - ellip) * (_xs / _radii)
+        _defl_ys = alpha_circ * np.sqrt(1 + ellip) * (_ys / _radii)
+
+        # And here we convert back to the real axes
+        defl_ys, defl_xs = self._align_from_major_axis(_defl_ys, _defl_xs)
+        return aa.Grid2DIrregular.from_yx_1d(
+            defl_ys, defl_xs
+        )
+
+    #@aa.grid_dec.grid_2d_to_structure
+    @aa.over_sample
+    @aa.grid_dec.to_array
+    @aa.grid_dec.transform
+    @aa.grid_dec.relocate_to_radial_minimum
+    def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
+        ys, xs = grid.T
+        (ycen, xcen) = self.centre
+        xoff, yoff = xs - xcen, ys - ycen
+        _ys, _xs = self._align_to_major_axis(yoff, xoff)
+
+        ellip = self._ellip()
+        _radii = np.sqrt(_xs**2 * (1 - ellip) + _ys**2 * (1 + ellip))
+
+        # Compute the convergence and deflection of a *circular* profile
+        kappa_circ = self._convergence(_radii)
+        alpha_circ = self._deflection_angle(_radii)
+
+        asymm_term = (ellip * (1 - ellip) * _xs**2 - ellip * (1 + ellip) * _ys**2) / _radii**2
+
+        # convergence = 1/2 \nabla \alpha = 1/2 \nabla^2 potential
+        # The "asymm_term" is asymmetric on x and y, so averages out to
+        # zero over all space
+        return kappa_circ * (1 - asymm_term) + (alpha_circ / _radii) * asymm_term
+
+    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.relocate_to_radial_minimum
+    def potential_2d_from(self, grid: aa.type.Grid2DLike):
+        # ys, xs = grid.T
+        # (ycen, xcen) = self.centre
+        # xoff, yoff = xs - xcen, ys - ycen
+        # _ys, _xs = self._align_to_major_axis(yoff, xoff)
+        # ellip = self._ellip()
+        # _radii = np.sqrt(_xs**2 * (1 - ellip) + _ys**2 * (1 + ellip))
+        # return super(dPIESph, self)._potential(_radii)
+        potential_grid = np.zeros(grid.shape[0])
+        return potential_grid

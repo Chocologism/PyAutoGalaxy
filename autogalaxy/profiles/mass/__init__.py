@@ -18,6 +18,8 @@ from .total import (
     dPIESph_custom1,
     dPIE_custom2,
     dPIESph_custom2,
+    dPIE_custom3,
+    dPIESph_custom3,
 )
 from .dark import (
     gNFW,
