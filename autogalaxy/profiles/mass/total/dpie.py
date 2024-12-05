@@ -65,11 +65,11 @@ class dPIESph(MassProfile):
         )
 
     def _potential(self, radii):
-        raise NotImplementedError
+        return 0
+        # raise NotImplementedError
 
     @aa.grid_dec.to_vector_yx
-    #@aa.grid_dec.grid_2d_to_structure
-    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike):
+    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
         xoff, yoff = xs - xcen, ys - ycen
@@ -84,21 +84,23 @@ class dPIESph(MassProfile):
             defl_y, defl_x
         )
 
-    #@aa.grid_dec.grid_2d_to_structure
+    # @aa.over_sample
+    @aa.grid_dec.to_array
     @aa.grid_dec.transform
     @aa.grid_dec.relocate_to_radial_minimum
-    def convergence_2d_from(self, grid: aa.type.Grid2DLike):
+    def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         # already transformed to center on profile centre so this works
         radsq = (grid[:, 0]**2 + grid[:, 1]**2)
         return self._convergence(np.sqrt(radsq))
 
-    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_array
     @aa.grid_dec.relocate_to_radial_minimum
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
-        # already transformed to center on profile centre so this works
-        radsq = (grid[:, 0]**2 + grid[:, 1]**2)
-        return self._potential(np.sqrt(radsq))
-
+        # # already transformed to center on profile centre so this works
+        # radsq = (grid[:, 0]**2 + grid[:, 1]**2)
+        # return self._potential(np.sqrt(radsq))
+        potential_grid = np.zeros(grid.shape[0])
+        return potential_grid
 
 class dPIE(dPIESph):
     '''
@@ -168,8 +170,7 @@ class dPIE(dPIESph):
         return min(ellip, MAX_ELLIP)
 
     @aa.grid_dec.to_vector_yx
-    #@aa.grid_dec.grid_2d_to_structure
-    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike):
+    def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
         xoff, yoff = xs - xcen, ys - ycen
@@ -191,8 +192,9 @@ class dPIE(dPIESph):
             defl_ys, defl_xs
         )
 
-    #@aa.grid_dec.grid_2d_to_structure
-    def convergence_2d_from(self, grid: aa.type.Grid2DLike):
+    # @aa.over_sample
+    @aa.grid_dec.to_array
+    def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
         xoff, yoff = xs - xcen, ys - ycen
@@ -212,15 +214,17 @@ class dPIE(dPIESph):
         # zero over all space
         return kappa_circ * (1 - asymm_term) + (alpha_circ / _radii) * asymm_term
 
-    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.relocate_to_radial_minimum
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
-        ys, xs = grid.T
-        (ycen, xcen) = self.centre
-        xoff, yoff = xs - xcen, ys - ycen
-        _ys, _xs = self._align_to_major_axis(yoff, xoff)
-        ellip = self._ellip()
-        _radii = np.sqrt(_xs**2 * (1 - ellip) + _ys**2 * (1 + ellip))
-        return super(dPIESph, self)._potential(_radii)
+        # ys, xs = grid.T
+        # (ycen, xcen) = self.centre
+        # xoff, yoff = xs - xcen, ys - ycen
+        # _ys, _xs = self._align_to_major_axis(yoff, xoff)
+        # ellip = self._ellip()
+        # _radii = np.sqrt(_xs**2 * (1 - ellip) + _ys**2 * (1 + ellip))
+        # return super(dPIESph, self)._potential(_radii)
+        potential_grid = np.zeros(grid.shape[0])
+        return potential_grid
 
 class dPIESph_custom1(MassProfile):
     '''
@@ -290,8 +294,6 @@ class dPIESph_custom1(MassProfile):
         raise NotImplementedError
 
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -307,7 +309,7 @@ class dPIESph_custom1(MassProfile):
             defl_y, defl_x
         )
 
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
     @aa.grid_dec.transform
     @aa.grid_dec.relocate_to_radial_minimum
@@ -316,7 +318,7 @@ class dPIESph_custom1(MassProfile):
         radsq = (grid[:, 0]**2 + grid[:, 1]**2)
         return self._convergence(np.sqrt(radsq))
 
-    # @aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_array
     @aa.grid_dec.relocate_to_radial_minimum
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # already transformed to center on profile centre so this works
@@ -395,8 +397,6 @@ class dPIE_custom1(dPIESph_custom1):
         return min(ellip, MAX_ELLIP)
 
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -424,10 +424,8 @@ class dPIE_custom1(dPIESph_custom1):
             defl_ys, defl_xs
         )
 
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -448,8 +446,7 @@ class dPIE_custom1(dPIESph_custom1):
         # zero over all space
         return kappa_circ * (1 - asymm_term) + (alpha_circ / _radii) * asymm_term
 
-    # @aa.grid_dec.grid_2d_to_structure
-    @aa.grid_dec.relocate_to_radial_minimum
+    @aa.grid_dec.to_array
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # ys, xs = grid.T
         # (ycen, xcen) = self.centre
@@ -528,11 +525,7 @@ class dPIESph_custom2(MassProfile):
         return 0
         # raise NotImplementedError
 
-    # @aa.grid_dec.to_vector_yx
-    # #@aa.grid_dec.grid_2d_to_structure
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -548,10 +541,7 @@ class dPIESph_custom2(MassProfile):
             defl_y, defl_x
         )
 
-    # #@aa.grid_dec.grid_2d_to_structure
-    # @aa.grid_dec.transform
-    # @aa.grid_dec.relocate_to_radial_minimum
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
     @aa.grid_dec.transform
     @aa.grid_dec.relocate_to_radial_minimum
@@ -560,7 +550,7 @@ class dPIESph_custom2(MassProfile):
         radsq = (grid[:, 0]**2 + grid[:, 1]**2)
         return self._convergence(np.sqrt(radsq))
 
-    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_array
     @aa.grid_dec.relocate_to_radial_minimum
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # already transformed to center on profile centre so this works
@@ -627,11 +617,7 @@ class dPIE_custom2(dPIESph_custom2):
         MAX_ELLIP = 0.99999
         return min(ellip, MAX_ELLIP)
 
-    # @aa.grid_dec.to_vector_yx
-    # #@aa.grid_dec.grid_2d_to_structure
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -654,11 +640,8 @@ class dPIE_custom2(dPIESph_custom2):
             defl_ys, defl_xs
         )
 
-    #@aa.grid_dec.grid_2d_to_structure
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -679,8 +662,7 @@ class dPIE_custom2(dPIESph_custom2):
         # zero over all space
         return kappa_circ * (1 - asymm_term) + (alpha_circ / _radii) * asymm_term
 
-    #@aa.grid_dec.grid_2d_to_structure
-    @aa.grid_dec.relocate_to_radial_minimum
+    @aa.grid_dec.to_array
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # ys, xs = grid.T
         # (ycen, xcen) = self.centre
@@ -756,11 +738,7 @@ class dPIESph_custom3(MassProfile):
         return 0
         # raise NotImplementedError
 
-    # @aa.grid_dec.to_vector_yx
-    # #@aa.grid_dec.grid_2d_to_structure
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -776,10 +754,7 @@ class dPIESph_custom3(MassProfile):
             defl_y, defl_x
         )
 
-    # #@aa.grid_dec.grid_2d_to_structure
-    # @aa.grid_dec.transform
-    # @aa.grid_dec.relocate_to_radial_minimum
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
     @aa.grid_dec.transform
     @aa.grid_dec.relocate_to_radial_minimum
@@ -788,7 +763,7 @@ class dPIESph_custom3(MassProfile):
         radsq = (grid[:, 0]**2 + grid[:, 1]**2)
         return self._convergence(np.sqrt(radsq))
 
-    #@aa.grid_dec.grid_2d_to_structure
+    @aa.grid_dec.to_array
     @aa.grid_dec.relocate_to_radial_minimum
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # already transformed to center on profile centre so this works
@@ -855,11 +830,7 @@ class dPIE_custom3(dPIESph_custom3):
         MAX_ELLIP = 0.99999
         return min(ellip, MAX_ELLIP)
 
-    # @aa.grid_dec.to_vector_yx
-    # #@aa.grid_dec.grid_2d_to_structure
     @aa.grid_dec.to_vector_yx
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -882,11 +853,8 @@ class dPIE_custom3(dPIESph_custom3):
             defl_ys, defl_xs
         )
 
-    #@aa.grid_dec.grid_2d_to_structure
-    @aa.over_sample
+    # @aa.over_sample
     @aa.grid_dec.to_array
-    @aa.grid_dec.transform
-    @aa.grid_dec.relocate_to_radial_minimum
     def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
         (ycen, xcen) = self.centre
@@ -907,8 +875,7 @@ class dPIE_custom3(dPIESph_custom3):
         # zero over all space
         return kappa_circ * (1 - asymm_term) + (alpha_circ / _radii) * asymm_term
 
-    #@aa.grid_dec.grid_2d_to_structure
-    @aa.grid_dec.relocate_to_radial_minimum
+    @aa.grid_dec.to_array
     def potential_2d_from(self, grid: aa.type.Grid2DLike):
         # ys, xs = grid.T
         # (ycen, xcen) = self.centre
