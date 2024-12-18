@@ -541,7 +541,7 @@ class dPIESph_custom2(MassProfile):
             defl_y, defl_x
         )
 
-    # @aa.over_sample
+    @aa.over_sample
     @aa.grid_dec.to_array
     @aa.grid_dec.transform
     @aa.grid_dec.relocate_to_radial_minimum
@@ -640,7 +640,7 @@ class dPIE_custom2(dPIESph_custom2):
             defl_ys, defl_xs
         )
 
-    # @aa.over_sample
+    @aa.over_sample
     @aa.grid_dec.to_array
     def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         ys, xs = grid.T
