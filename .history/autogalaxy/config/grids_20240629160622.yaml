@@ -20,8 +20,6 @@ radial_minimum:
     dPIESph_custom1: 1.0e-08
     dPIE_custom2: 1.0e-08
     dPIESph_custom2: 1.0e-08
-    dPIE_custom3: 1.0e-08
-    dPIESph_custom3: 1.0e-08
     ExponentialRadialGradient: 1.0e-06
     ExponentialRadialGradientSph: 1.0e-06
     ElsonFreeFall: 1.0e-08
@@ -110,12 +108,6 @@ over_sampling:
     DevVaucouleursSph: [3.01, 10.01]
     dPIE: [3.01, 10.01]
     dPIESph: [3.01, 10.01]
-    dPIE_custom1: [3.01, 10.01]
-    dPIESph_custom1: [3.01, 10.01]
-    dPIE_custom2: [3.01, 10.01]
-    dPIESph_custom2: [3.01, 10.01]
-    dPIE_custom3: [3.01, 10.01]
-    dPIESph_custom3: [3.01, 10.01]
     ExponentialRadialGradient: [3.01, 10.01]
     ExponentialRadialGradientSph: [3.01, 10.01]
     ElsonFreeFall: [3.01, 10.01]
@@ -183,12 +175,6 @@ over_sampling:
     DevVaucouleursSph: [32, 4, 2]
     dPIE: [32, 4, 2]
     dPIESph: [32, 4, 2]
-    dPIE_custom1: [32, 4, 2]
-    dPIESph_custom1: [32, 4, 2]
-    dPIE_custom2: [32, 4, 2]
-    dPIESph_custom2: [32, 4, 2]
-    dPIE_custom3: [32, 4, 2]
-    dPIESph_custom3: [32, 4, 2]
     ExponentialRadialGradient: [32, 4, 2]
     ExponentialRadialGradientSph: [32, 4, 2]
     ElsonFreeFall: [32, 4, 2]
