@@ -14,6 +14,8 @@ label:
     core_radius_0: C_{rm r0}
     core_radius_1: C_{\rm r1}
     E0: E_0
+    ra: r_a
+    rs: r_s
     effective_radius: R_{\rm eff}
     einstein_radius: \theta_{\rm Ein}
     ell_comps_0: \epsilon_{\rm 1}
