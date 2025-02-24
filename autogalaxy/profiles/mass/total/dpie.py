@@ -518,6 +518,9 @@ class dPIESph_custom2(MassProfile):
             (1/np.sqrt(a**2 + radsq) - 1/np.sqrt(s**2 + radsq))
         )
     
+    def convergence_func(self, grid_radius: float) -> float:
+        return self._convergence(grid_radius)
+    
     def _theta_E_from_WangH(self):
         return self.E0 * (self.rs + self.ra)**2 * (self.rs - self.ra) / self.rs**3
 
