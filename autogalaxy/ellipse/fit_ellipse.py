@@ -328,4 +328,4 @@ class FitEllipse(aa.FitDataset):
         -------
         The figure of merit of the fit.
         """
-        return self.log_likelihood
+        return -0.5* (self.chi_squared + self.noise_normalization)
