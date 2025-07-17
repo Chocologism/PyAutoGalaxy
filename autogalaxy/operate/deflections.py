@@ -56,7 +56,9 @@ def evaluation_grid(func):
 
         pixel_scale_ratio = grid.pixel_scale / pixel_scale
 
-        zoom_shape_native = grid.mask.zoom_shape_native
+        zoom = aa.Zoom2D(mask=grid.mask)
+
+        zoom_shape_native = zoom.shape_native
         shape_native = (
             int(pixel_scale_ratio * zoom_shape_native[0]),
             int(pixel_scale_ratio * zoom_shape_native[1]),
@@ -78,7 +80,7 @@ def evaluation_grid(func):
         grid = aa.Grid2D.uniform(
             shape_native=shape_native,
             pixel_scales=(pixel_scale, pixel_scale),
-            origin=grid.mask.zoom_offset_scaled,
+            origin=zoom.offset_scaled,
         )
 
         grid.is_evaluation_grid = True
@@ -104,25 +106,80 @@ class OperateDeflections:
         The function which returns the mass object's 2D deflection angles.
     """
 
-    @property
-    def plane_redshifts(self) -> List[float]:
-        """
-        Imitating tracer API but with no planes
-        """
-        return []
-
-    def deflections_between_planes_from(self, grid, plane_i: int, plane_j: int):
-        """
-        Assumes a simple OperateDeflections object (e.g. mass profile) that only has
-        a single plane of deflections
-        """
-        return self.deflections_yx_2d_from(grid=grid)
-
     def deflections_yx_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         raise NotImplementedError
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__ and self.__class__ is other.__class__
+
+    def time_delay_geometry_term_from(self, grid) -> aa.Array2D:
+        """
+            Returns the geometric time delay term of the Fermat potential for a given grid of image-plane positions.
+
+            This term is given by:
+
+        .. math::
+                \[\tau_{\text{geom}}(\boldsymbol{\theta}) = \frac{1}{2} |\boldsymbol{\theta} - \boldsymbol{\beta}|^2\]
+
+            where:
+            - \( \boldsymbol{\theta} \) is the image-plane coordinate,
+            - \( \boldsymbol{\beta} = \boldsymbol{\theta} - \boldsymbol{\alpha}(\boldsymbol{\theta}) \) is the source-plane coordinate,
+            - \( \boldsymbol{\alpha} \) is the deflection angle at each image-plane coordinate.
+
+            Parameters
+            ----------
+            grid
+                The 2D grid of (y,x) arc-second coordinates the deflection angles and time delay geometric term are computed
+                on.
+
+            Returns
+            -------
+            The geometric time delay term at each grid position.
+        """
+        deflections = self.deflections_yx_2d_from(grid=grid)
+
+        src_y = grid[:, 0] - deflections[:, 0]
+        src_x = grid[:, 1] - deflections[:, 1]
+
+        delay = 0.5 * ((grid[:, 0] - src_y) ** 2 + (grid[:, 1] - src_x) ** 2)
+
+        if isinstance(grid, aa.Grid2DIrregular):
+            return aa.ArrayIrregular(values=delay)
+        return aa.Array2D(values=delay, mask=grid.mask)
+
+    def fermat_potential_from(self, grid) -> aa.Array2D:
+        """
+        Returns the Fermat potential for a given grid of image-plane positions.
+
+        This is the sum of the geometric time delay term and the gravitational (Shapiro) delay term (i.e. the lensing
+        potential), and is given by:
+
+        .. math::
+            \[\phi(\boldsymbol{\theta}) = \frac{1}{2} |\boldsymbol{\theta} - \boldsymbol{\beta}|^2 - \psi(\boldsymbol{\theta})\]
+
+        where:
+        - \( \boldsymbol{\theta} \) is the image-plane coordinate,
+        - \( \boldsymbol{\beta} = \boldsymbol{\theta} - \boldsymbol{\alpha}(\boldsymbol{\theta}) \) is the source-plane coordinate,
+        - \( \psi(\boldsymbol{\theta}) \) is the lensing potential,
+        - \( \phi(\boldsymbol{\theta}) \) is the Fermat potential.
+
+        Parameters
+        ----------
+        grid
+            The 2D grid of (y,x) arc-second coordinates the Fermat potential is computed on.
+
+        Returns
+        -------
+        The Fermat potential at each grid position.
+        """
+        time_delay_geometry_term = self.time_delay_geometry_term_from(grid=grid)
+        potential = self.potential_2d_from(grid=grid)
+
+        fermat_potential = time_delay_geometry_term - potential
+
+        if isinstance(grid, aa.Grid2DIrregular):
+            return aa.ArrayIrregular(values=fermat_potential)
+        return aa.Array2D(values=fermat_potential, mask=grid.mask)
 
     @precompute_jacobian
     def tangential_eigen_value_from(self, grid, jacobian=None) -> aa.Array2D:
@@ -676,9 +733,7 @@ class OperateDeflections:
         einstein_radius_list = self.einstein_radius_list_from(
             grid=grid, pixel_scale=pixel_scale
         )
-        return [
-            np.pi * einstein_radius**2 for einstein_radius in einstein_radius_list
-        ]
+        return [np.pi * einstein_radius**2 for einstein_radius in einstein_radius_list]
 
     @evaluation_grid
     def einstein_mass_angular_from(

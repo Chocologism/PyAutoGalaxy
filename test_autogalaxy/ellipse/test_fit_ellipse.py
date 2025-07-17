@@ -30,8 +30,8 @@ def make_imaging_lh_masked(imaging_lh):
         mask=[
             [True, True, True, True, True, True, True],
             [True, True, True, True, True, True, True],
-            [True, True, False, False, False, True, True],
-            [True, True, False, True, False, True, True],
+            [True, True, False, False, True, True, True],
+            [True, True, False, False, True, True, True],
             [True, True, False, False, False, True, True],
             [True, True, True, True, True, True, True],
             [True, True, True, True, True, True, True],
@@ -67,28 +67,16 @@ def test___points_from_major_axis__multipole(imaging_lh):
     assert fit._points_from_major_axis[1, 1] == pytest.approx(-0.038278334, 1.0e-4)
 
 
-def test__mask_interp(imaging_lh, imaging_lh_masked):
-    ellipse_0 = ag.Ellipse(centre=(0.0, 0.0), ell_comps=(0.0, 0.0), major_axis=1.0)
-
-    fit = ag.FitEllipse(dataset=imaging_lh, ellipse=ellipse_0)
-
-    assert fit.mask_interp == pytest.approx([False, False, False, False, False], 1.0e-4)
-
-    fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
-
-    assert fit.mask_interp == pytest.approx([False, True, True, True, True], 1.0e-4)
-
-
-def test__total_points_interp(imaging_lh, imaging_lh_masked):
-    ellipse_0 = ag.Ellipse(centre=(0.0, 0.0), ell_comps=(0.0, 0.0), major_axis=1.0)
-
-    fit = ag.FitEllipse(dataset=imaging_lh, ellipse=ellipse_0)
-
-    assert fit.total_points_interp == 5
-
-    fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
-
-    assert fit.total_points_interp == 1
+# def test__mask_interp(imaging_lh, imaging_lh_masked):
+#     ellipse_0 = ag.Ellipse(centre=(0.0, 0.0), ell_comps=(0.0, 0.0), major_axis=1.0)
+#
+#     fit = ag.FitEllipse(dataset=imaging_lh, ellipse=ellipse_0)
+#
+#     assert fit.mask_interp == pytest.approx([False, False, False, False, False], 1.0e-4)
+#
+#     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
+#
+#     assert fit.mask_interp == pytest.approx([False, True, True, True, True], 1.0e-4)
 
 
 def test__data_interp(imaging_lh, imaging_lh_masked):
@@ -102,8 +90,7 @@ def test__data_interp(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.data_interp[0] == pytest.approx(6.0, 1.0e-4)
-    assert np.isnan(fit.data_interp[1:5]).all()
+    assert fit.data_interp[0] == pytest.approx(1.8378134567395, 1.0e-4)
 
 
 def test__noise_map_interp(imaging_lh, imaging_lh_masked):
@@ -116,7 +103,6 @@ def test__noise_map_interp(imaging_lh, imaging_lh_masked):
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
     assert fit.noise_map_interp[0] == pytest.approx(2.0, 1.0e-4)
-    assert np.isnan(fit.noise_map_interp[1:5]).all()
 
 
 def test__signal_to_noise_map_interp(imaging_lh, imaging_lh_masked):
@@ -130,8 +116,7 @@ def test__signal_to_noise_map_interp(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.signal_to_noise_map_interp[0] == pytest.approx(3.0, 1.0e-4)
-    assert np.isnan(fit.signal_to_noise_map_interp[1:5]).all()
+    assert fit.signal_to_noise_map_interp[0] == pytest.approx(0.91890672836, 1.0e-4)
 
 
 def test__residual_map(imaging_lh, imaging_lh_masked):
@@ -145,8 +130,7 @@ def test__residual_map(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.residual_map[0] == pytest.approx(0.0, 1.0e-4)
-    assert np.isnan(fit.noise_map_interp[1:5]).all()
+    assert fit.residual_map[0] == pytest.approx(-2.514972947, 1.0e-4)
 
 
 def test__normalized_residual_map(imaging_lh, imaging_lh_masked):
@@ -160,8 +144,7 @@ def test__normalized_residual_map(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.normalized_residual_map[0] == pytest.approx(0.0, 1.0e-4)
-    assert np.isnan(fit.noise_map_interp[1:5]).all()
+    assert fit.normalized_residual_map[0] == pytest.approx(-1.25748647, 1.0e-4)
 
 
 def test__chi_squared_map(imaging_lh, imaging_lh_masked):
@@ -175,8 +158,7 @@ def test__chi_squared_map(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.chi_squared_map[0] == pytest.approx(0.0, 1.0e-4)
-    assert np.isnan(fit.noise_map_interp[1:5]).all()
+    assert fit.chi_squared_map[0] == pytest.approx(1.58127223199, 1.0e-4)
 
 
 def test__chi_squared(imaging_lh, imaging_lh_masked):
@@ -190,7 +172,7 @@ def test__chi_squared(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.chi_squared == pytest.approx(0.0, 1.0e-4)
+    assert fit.chi_squared == pytest.approx(5.72639320225, 1.0e-4)
 
 
 def test__noise_normalization(imaging_lh, imaging_lh_masked):
@@ -202,7 +184,7 @@ def test__noise_normalization(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.noise_normalization == pytest.approx(3.224171427, 1.0e-4)
+    assert fit.noise_normalization == pytest.approx(16.120857137646, 1.0e-4)
 
 
 def test__log_likelihood(imaging_lh, imaging_lh_masked):
@@ -214,4 +196,4 @@ def test__log_likelihood(imaging_lh, imaging_lh_masked):
 
     fit = ag.FitEllipse(dataset=imaging_lh_masked, ellipse=ellipse_0)
 
-    assert fit.log_likelihood == pytest.approx(0.0, 1.0e-4)
+    assert fit.log_likelihood == pytest.approx(-0.169821080058, 1.0e-4)

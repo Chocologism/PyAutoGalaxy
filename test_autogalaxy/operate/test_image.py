@@ -103,7 +103,7 @@ def test__unmasked_blurred_image_2d_from():
         pixel_scales=1.0,
     )
 
-    grid = ag.Grid2D.from_mask(mask=mask)
+    grid = ag.Grid2D.from_mask(mask=mask, over_sample_size=1)
 
     lp = ag.lp.Sersic(intensity=0.1)
 
@@ -130,8 +130,6 @@ def test__unmasked_blurred_image_2d_from():
     blurred_image_2d_not_operated = padded_grid.mask.unmasked_blurred_array_from(
         padded_array=image_2d_not_operated, psf=psf, image_shape=grid.mask.shape
     )
-
-    image_2d_operated = light_operated.image_2d_from(grid=grid)
 
     image_2d_operated = light_operated.image_2d_from(grid=padded_grid)
 

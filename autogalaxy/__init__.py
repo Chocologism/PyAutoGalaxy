@@ -3,7 +3,6 @@ from autoarray.dataset import preprocess  # noqa
 from autoarray.dataset.imaging.dataset import Imaging  # noqa
 from autoarray.dataset.interferometer.dataset import Interferometer  # noqa
 from autoarray.dataset.dataset_model import DatasetModel
-from autoarray.dataset.over_sampling import OverSamplingDataset
 from autoarray.inversion.inversion.mapper_valued import MapperValued
 from autoarray.inversion.pixelization import mesh  # noqa
 from autoarray.inversion import regularization as reg  # noqa
@@ -23,6 +22,7 @@ from autoarray.inversion.pixelization.mappers.factory import (
 from autoarray.inversion.pixelization.border_relocator import BorderRelocator
 from autoarray.mask.mask_1d import Mask1D  # noqa
 from autoarray.mask.mask_2d import Mask2D  # noqa
+from autoarray.mask.derive.zoom_2d import Zoom2D
 from autoarray.operators.convolver import Convolver  # noqa
 from autoarray.operators.convolver import Convolver  # noqa
 from autoarray.operators.transformer import TransformerDFT  # noqa
@@ -30,16 +30,13 @@ from autoarray.operators.transformer import TransformerNUFFT  # noqa
 from autoarray.layout.layout import Layout2D  # noqa
 from autoarray.structures.arrays.uniform_1d import Array1D  # noqa
 from autoarray.structures.arrays.uniform_2d import Array2D  # noqa
+from autoarray.structures.arrays.rgb import Array2DRGB
 from autoarray.structures.arrays.irregular import ArrayIrregular  # noqa
 from autoarray.structures.header import Header  # noqa
 from autoarray.structures.grids.uniform_1d import Grid1D  # noqa
 from autoarray.structures.grids.uniform_2d import Grid2D  # noqa
 from autoarray.structures.grids.irregular_2d import Grid2DIrregular  # noqa
-from autoarray.structures.grids.irregular_2d import Grid2DIrregularUniform  # noqa
-from autoarray.operators.over_sampling.uniform import OverSamplingUniform  # noqa
-from autoarray.operators.over_sampling.uniform import OverSamplerUniform  # noqa
-from autoarray.operators.over_sampling.iterate import OverSamplingIterate
-from autoarray.operators.over_sampling.iterate import OverSamplerIterate
+from autoarray.operators.over_sampling.over_sampler import OverSampler  # noqa
 from autoarray.structures.mesh.rectangular_2d import Mesh2DRectangular  # noqa
 from autoarray.structures.mesh.voronoi_2d import Mesh2DVoronoi  # noqa
 from autoarray.structures.mesh.delaunay_2d import Mesh2DDelaunay  # noqa
@@ -112,7 +109,12 @@ from .gui.clicker import Clicker
 from .gui.scribbler import Scribbler
 
 from autoconf import conf
+from autoconf.fitsable import ndarray_via_hdu_from
+from autoconf.fitsable import ndarray_via_fits_from
+from autoconf.fitsable import header_obj_from
+from autoconf.fitsable import output_to_fits
+from autoconf.fitsable import hdu_list_for_output_from
 
 conf.instance.register(__file__)
 
-__version__ = "2024.11.13.2"
+__version__ = "2025.5.10.1"

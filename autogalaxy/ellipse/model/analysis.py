@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Dict, List, Optional, Tuple
 
-from autoconf.dictable import to_dict
+from autoconf.fitsable import hdu_list_for_output_from
 
 import autofit as af
 import autoarray as aa
@@ -10,6 +10,8 @@ import autoarray as aa
 from autogalaxy.ellipse.fit_ellipse import FitEllipse
 from autogalaxy.ellipse.model.result import ResultEllipse
 from autogalaxy.ellipse.model.visualizer import VisualizerEllipse
+
+from autogalaxy import exc
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +75,11 @@ class AnalysisEllipse(af.Analysis):
         float
             The log likelihood indicating how well this model instance fitted the imaging data.
         """
-        fit_list = self.fit_list_from(instance=instance)
-
-        return sum(fit.log_likelihood for fit in fit_list)
+        try:
+            fit_list = self.fit_list_from(instance=instance)
+            return sum(fit.log_likelihood for fit in fit_list)
+        except ValueError as e:
+            raise exc.FitException from e
 
     def fit_list_from(self, instance: af.ModelInstance) -> List[FitEllipse]:
         """
@@ -184,26 +188,7 @@ class AnalysisEllipse(af.Analysis):
              The paths object which manages all paths, e.g. where the non-linear search outputs are stored,
              visualization, and the pickled objects used by the aggregator output by this function.
         """
-        paths.save_fits(
-            name="data",
-            hdu=self.dataset.data.hdu_for_output,
-            prefix="dataset",
-        )
-        paths.save_fits(
-            name="noise_map",
-            hdu=self.dataset.noise_map.hdu_for_output,
-            prefix="dataset",
-        )
-        paths.save_fits(
-            name="mask",
-            hdu=self.dataset.mask.hdu_for_output,
-            prefix="dataset",
-        )
-        paths.save_json(
-            name="over_sampling",
-            object_dict=to_dict(self.dataset.over_sampling),
-            prefix="dataset",
-        )
+        pass
 
     def profile_log_likelihood_function(
         self, instance: af.ModelInstance, paths: Optional[af.DirectoryPaths] = None
