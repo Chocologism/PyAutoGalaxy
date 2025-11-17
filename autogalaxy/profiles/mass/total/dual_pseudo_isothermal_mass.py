@@ -410,67 +410,42 @@ class dPIEMass(MassProfile):
             **kwargs,
         )
 
-    def _deflection_angle(self, radii, xp=np):
-        """
-        For a circularly symmetric dPIEPotential profile, computes the magnitude of the deflection at each radius.
-        """
-        a, s = self.ra, self.rs
-        radii = xp.maximum(radii, 1e-8)
-        f = radii / (a + xp.sqrt(a**2 + radii**2)) - radii / (
-            s + xp.sqrt(s**2 + radii**2)
-        )
-
-        # c.f. Eliasdottir '07 eq. A23
-        # magnitude of deflection
-        # alpha = self.E0 * (s + a) / s * f
-        alpha = self.b0 * s / (s - a) * f
-        return alpha
-
-    def _convergence(self, radii, xp=np):
+    ################# Analytical Form for PIEMass kappa map ###########################
+    def _convergence(self, radii):
 
         radsq = radii * radii
-        a, s = self.ra, self.rs
+        a = self.ra
 
         return (
             self.b0
             / 2
-            * s
-            / (s - a)
-            * (1 / xp.sqrt(a**2 + radsq) - 1 / xp.sqrt(s**2 + radsq))
+            * (1 / np.sqrt(a**2 + radsq))
         )
 
-    @aa.grid_dec.to_vector_yx
+    @aa.grid_dec.to_array
     @aa.grid_dec.transform
-    def convergence_2d_from(self, grid: aa.type.Grid2DLike, xp=np, **kwargs):
+    def convergence_2d_from(self, grid: aa.type.Grid2DLike, **kwargs):
         """
-        Returns the two dimensional projected convergence on a grid of (y,x) arc-second coordinates.
+        Returns the two-dimensional projected convergence on a grid of (y,x)
+        arc-second coordinates.
 
-        The `grid_2d_to_structure` decorator reshapes the ndarrays the convergence is outputted on. See
-        *aa.grid_2d_to_structure* for a description of the output.
+        The `grid_2d_to_structure` decorator reshapes the ndarrays the convergence
+        is outputted on. See *aa.grid_2d_to_structure* for details.
 
         Parameters
         ----------
         grid
-            The grid of (y,x) arc-second coordinates the convergence is computed on.
+            The grid of (y,x) arc-second coordinates on which the convergence is computed.
         """
-        ellip = self._ellip(xp)
-        grid_radii = xp.sqrt(
-            grid.array[:, 1] ** 2 * (1 - ellip) + grid.array[:, 0] ** 2 * (1 + ellip)
+        ellip = self._ellip()
+        grid_radii = np.sqrt(
+            grid.array[:, 1] ** 2 / (1 + ellip) ** 2 + grid.array[:, 0] ** 2 / (1 - ellip) ** 2
         )
-
         # Compute the convergence and deflection of a *circular* profile
-        kappa_circ = self._convergence(grid_radii, xp)
-        alpha_circ = self._deflection_angle(grid_radii, xp)
+        kappa = self._convergence(grid_radii)
 
-        asymm_term = (
-            ellip * (1 - ellip) * grid.array[:, 1] ** 2
-            - ellip * (1 + ellip) * grid.array[:, 0] ** 2
-        ) / grid_radii**2
-
-        # convergence = 1/2 \nabla \alpha = 1/2 \nabla^2 potential
-        # The "asymm_term" is asymmetric on x and y, so averages out to
-        # zero over all space
-        return kappa_circ * (1 - asymm_term) + (alpha_circ / grid_radii) * asymm_term
+        return kappa
+    ##########################################################################
 
     @aa.grid_dec.transform
     def analytical_hessian_2d_from(self, grid: "aa.type.Grid2DLike", xp=np, **kwargs):
