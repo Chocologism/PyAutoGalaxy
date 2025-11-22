@@ -277,7 +277,7 @@ class PIEMass(MassProfile):
         """
         ellip = self._ellip()
         factor = self.b0
-        zis = _ci05(x=grid.array[:, 1], y=grid.array[:, 0], eps=ellip, rcore=self.ra)
+        zis = _ci05(x=grid[:, 1], y=grid[:, 0], eps=ellip, rcore=self.ra)
 
         # This is in axes aligned to the major/minor axis
         deflection_x = zis.real
@@ -305,7 +305,7 @@ class PIEMass(MassProfile):
         ellip = self._ellip()
 
         hessian_xx, hessian_xy, hessian_yx, hessian_yy = _mdci05(
-            x=grid.array[:, 1], y=grid.array[:, 0], eps=ellip, rcore=self.ra, b0=self.b0
+            x=grid[:, 1], y=grid[:, 0], eps=ellip, rcore=self.ra, b0=self.b0
         )
 
         return hessian_yy, hessian_xy, hessian_yx, hessian_xx
@@ -392,8 +392,8 @@ class dPIEMass(MassProfile):
         ellip = self._ellip()
         factor = self.b0 * self.rs / (self.rs - self.ra)
         zis = _ci05f(
-            x=grid.array[:, 1],
-            y=grid.array[:, 0],
+            x=grid[:, 1],
+            y=grid[:, 0],
             eps=ellip,
             rcore=self.ra,
             rcut=self.rs,
@@ -439,7 +439,7 @@ class dPIEMass(MassProfile):
         """
         ellip = self._ellip()
         grid_radii = np.sqrt(
-            grid.array[:, 1] ** 2 / (1 + ellip) ** 2 + grid.array[:, 0] ** 2 / (1 - ellip) ** 2
+            grid[:, 1] ** 2 / (1 + ellip) ** 2 + grid[:, 0] ** 2 / (1 - ellip) ** 2
         )
         # Compute the convergence and deflection of a *circular* profile
         kappa = self._convergence(grid_radii)
@@ -466,10 +466,10 @@ class dPIEMass(MassProfile):
 
         t05 = self.rs / (self.rs - self.ra)
         g05c_a, g05c_b, g05c_c, g05c_d = _mdci05(
-            x=grid.array[:, 1], y=grid.array[:, 0], eps=ellip, rcore=self.ra, b0=self.b0
+            x=grid[:, 1], y=grid[:, 0], eps=ellip, rcore=self.ra, b0=self.b0
         )
         g05cut_a, g05cut_b, g05cut_c, g05cut_d = _mdci05(
-            x=grid.array[:, 1], y=grid.array[:, 0], eps=ellip, rcore=self.rs, b0=self.b0
+            x=grid[:, 1], y=grid[:, 0], eps=ellip, rcore=self.rs, b0=self.b0
         )
 
         # Compute Hessian matrix components
@@ -571,13 +571,13 @@ class dPIEMassSph(dPIEMass):
         s = self.rs
         # radii = self.radial_grid_from(grid=grid, **kwargs)
         # R2 = radii * radii
-        R2 = grid.array[:, 1] * grid.array[:, 1] + grid.array[:, 0] * grid.array[:, 0]
+        R2 = grid[:, 1] * grid[:, 1] + grid[:, 0] * grid[:, 0]
         factor = np.sqrt(R2 + a * a) - a - np.sqrt(R2 + s * s) + s
         factor *= self.b0 * s / (s - a) / R2
 
         # This is in axes aligned to the major/minor axis
-        deflection_x = grid.array[:, 1] * factor
-        deflection_y = grid.array[:, 0] * factor
+        deflection_x = grid[:, 1] * factor
+        deflection_y = grid[:, 0] * factor
 
         # And here we convert back to the real axes
         return self.rotated_grid_from_reference_frame_from(
@@ -624,14 +624,14 @@ class dPIEMassSph(dPIEMass):
         # ∂²ψ/∂²R = ∂(z/R)/∂R = (∂z/∂R * R - z * 1) / R^2
         #                     = {( R^2 / √(R^2 + a^2)) - ( R^2 / √(R^2 + s^2)) - z} / R^2
         #                     = p
-        R2 = grid.array[:, 1] * grid.array[:, 1] + grid.array[:, 0] * grid.array[:, 0]
+        R2 = grid[:, 1] * grid[:, 1] + grid[:, 0] * grid[:, 0]
         z = np.sqrt(R2 + a * a) - a - np.sqrt(R2 + s * s) + s
         p = (1.0 - a / np.sqrt(a * a + R2)) * a / R2 - (
             1.0 - s / np.sqrt(s * s + R2)
         ) * s / R2
-        X = grid.array[:, 1] * grid.array[:, 1] / R2  # x^2 / R^2
-        Y = grid.array[:, 0] * grid.array[:, 0] / R2  # y^2 / R^2
-        XY = grid.array[:, 1] * grid.array[:, 0] / R2  # x*y / R^2
+        X = grid[:, 1] * grid[:, 1] / R2  # x^2 / R^2
+        Y = grid[:, 0] * grid[:, 0] / R2  # y^2 / R^2
+        XY = grid[:, 1] * grid[:, 0] / R2  # x*y / R^2
 
         # ∂²ψ/∂x²  = ∂²ψ/∂R² * (∂R/∂x)² + ∂²R/∂x² * ∂ψ/∂R
         #          = p * (x / R)^2 + y^2 / R^3 * z / R
