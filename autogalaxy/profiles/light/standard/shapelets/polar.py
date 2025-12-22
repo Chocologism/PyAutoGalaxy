@@ -108,7 +108,7 @@ class ShapeletPolar(AbstractShapelet):
         else:
             azimuthal = np.cos((-1) * self.m * theta)
 
-        return const * radial * azimuthal
+        return self._intensity * const * radial * azimuthal
 
 
 class ShapeletPolarSph(ShapeletPolar):
